@@ -4,6 +4,7 @@ import com.kstd.api.common.response.ApiResponse;
 import com.kstd.api.common.response.ErrorResponse;
 import com.kstd.api.domain.lecture.dto.LectureDTO;
 import com.kstd.api.domain.lecture.dto.PopularLectureDTO;
+import com.kstd.api.domain.lecture.entity.LectureRegistrationLog;
 import com.kstd.api.domain.lecture.request.LectureRegistrationRequest;
 import com.kstd.api.domain.user.dto.UserLectureRegistrationsDTO;
 import com.kstd.api.front.service.LectureRegistrationQueueService;
@@ -40,9 +41,8 @@ public class LectureUserController {
 
     @PostMapping("/registrations/user")
     @Operation(summary = "강연 신청", description = "강연 신청(사번 입력, 같은 강연 중복 신청 제한)을 큐에 적재한다.")
-    public ApiResponse registerForLecture(@RequestBody LectureRegistrationRequest lectureRegistrationRequest) throws InterruptedException {
-        lectureRegistrationQueueService.addRegistrationToQueue(lectureRegistrationRequest);
-        return ApiResponse.success();
+    public ApiResponse<String> registerForLecture(@RequestBody LectureRegistrationRequest lectureRegistrationRequest) {
+        return ApiResponse.success(lectureRegistrationQueueService.addRegistrationToQueue(lectureRegistrationRequest));
     }
 
     @GetMapping("/registrations/user/{userNo}")
@@ -57,8 +57,8 @@ public class LectureUserController {
     @PutMapping("/{lectureId}/registrations/{registrationId}/cancel")
     @Operation(summary = "신청 강연 취소", description = "신청한 강연을 취소한다.", responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "신청 강연 취소 성공", content = @Content(schema = @Schema(implementation = UserLectureRegistrationsDTO.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "강연 정보가 일치하지 않습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "신청 정보를 찾을 수 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "강연 ID가 신청 정보와 일치하지 않습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "강연 신청 정보를 찾을 수 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 
     })
     public ApiResponse updateRegistrationStatus(@Parameter(description = "강의ID") @PathVariable Long lectureId,
@@ -73,5 +73,18 @@ public class LectureUserController {
     })
     public ApiResponse<List<PopularLectureDTO>> getPopularLectures() {
         return ApiResponse.success(frontService.findPopularLectures());
+    }
+
+
+    /**
+     * 사용자의 강의 신청 상태를 조회합니다.
+     *
+     * @param userId 사용자 ID
+     * @return 신청 상태 목록
+     */
+    @GetMapping("/status/{userId}")
+    public ApiResponse<List<LectureRegistrationLog>> getRegistrationStatus(@PathVariable Long userId) {
+//        List<LectureRegistrationLog> logs = lectureRegistrationLogRepository.findByUserId(userId);
+        return ApiResponse.success(null);
     }
 }

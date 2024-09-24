@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS lecture (
     place VARCHAR(100) NOT NULL,
     capacity INT NOT NULL,
     time TIMESTAMP NOT NULL,
-    content TEXT,
+    content VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -32,3 +32,13 @@ COMMENT ON COLUMN users.user_no is '사용자 번호';
 COMMENT ON COLUMN users.name is '사용자 이름';
 
 CREATE INDEX IF NOT EXISTS idx_users_user_no ON users (user_no);
+
+CREATE TABLE LectureRegistrationLog (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    lecture_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL, -- QUEUED, PROCESSING, SUCCESS, FAILED
+    message VARCHAR(255),
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
