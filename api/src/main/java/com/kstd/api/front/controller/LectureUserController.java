@@ -3,8 +3,8 @@ package com.kstd.api.front.controller;
 import com.kstd.api.common.response.ApiResponse;
 import com.kstd.api.common.response.ErrorResponse;
 import com.kstd.api.domain.lecture.dto.LectureDTO;
+import com.kstd.api.domain.lecture.dto.LectureRegistrationLogDTO;
 import com.kstd.api.domain.lecture.dto.PopularLectureDTO;
-import com.kstd.api.domain.lecture.entity.LectureRegistrationLog;
 import com.kstd.api.domain.lecture.request.LectureRegistrationRequest;
 import com.kstd.api.domain.user.dto.UserLectureRegistrationsDTO;
 import com.kstd.api.front.service.LectureRegistrationQueueService;
@@ -30,13 +30,13 @@ import java.util.List;
 @RequestMapping("/api")
 @Tag(name = "사용자 강의")
 public class LectureUserController {
-    private final LectureUserService frontService;
+    private final LectureUserService lectureUserService;
     private final LectureRegistrationQueueService lectureRegistrationQueueService;
 
     @GetMapping("/lectures/scheduled")
     @Operation(summary = "강연 목록 조회", description = "신청 가능한 시점(1주일 전)부터 강연 시작 시간 1일 후까지 노출한다.")
     public ApiResponse<List<LectureDTO>> getLectureList() {
-        return ApiResponse.success(frontService.findLectureByScheduled());
+        return ApiResponse.success(lectureUserService.findLectureByScheduled());
     }
 
     @PostMapping("/registrations/user")
@@ -51,7 +51,7 @@ public class LectureUserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사번의 사용자 정보를 찾을 수 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ApiResponse<UserLectureRegistrationsDTO> getUserLectureRegistrations(@Parameter(description = "사용자사번") @PathVariable Long userNo) {
-        return ApiResponse.success(frontService.findLectureRegistrationsByUserNo(userNo));
+        return ApiResponse.success(lectureUserService.findLectureRegistrationsByUserNo(userNo));
     }
 
     @PutMapping("/{lectureId}/registrations/{registrationId}/cancel")
@@ -63,7 +63,7 @@ public class LectureUserController {
     })
     public ApiResponse updateRegistrationStatus(@Parameter(description = "강의ID") @PathVariable Long lectureId,
                                                 @Parameter(description = "강의등록ID") @PathVariable Long registrationId) {
-        frontService.cancelRegistration(lectureId, registrationId);
+        lectureUserService.cancelRegistration(lectureId, registrationId);
         return ApiResponse.success();
     }
 
@@ -72,7 +72,7 @@ public class LectureUserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = PopularLectureDTO.class))),
     })
     public ApiResponse<List<PopularLectureDTO>> getPopularLectures() {
-        return ApiResponse.success(frontService.findPopularLectures());
+        return ApiResponse.success(lectureUserService.findPopularLectures());
     }
 
 
@@ -82,9 +82,10 @@ public class LectureUserController {
      * @param userId 사용자 ID
      * @return 신청 상태 목록
      */
-    @GetMapping("/status/{userId}")
-    public ApiResponse<List<LectureRegistrationLog>> getRegistrationStatus(@PathVariable Long userId) {
-//        List<LectureRegistrationLog> logs = lectureRegistrationLogRepository.findByUserId(userId);
-        return ApiResponse.success(null);
+    @GetMapping("/lectures/{lectureId}/status/{userId}")
+    public ApiResponse<LectureRegistrationLogDTO> getRegistrationStatus(@PathVariable Long lectureId,
+                                                                        @PathVariable Long userId) {
+        LectureRegistrationLogDTO logs = lectureUserService.findLectureRegistrationLog(lectureId, userId);
+        return ApiResponse.success(logs);
     }
 }

@@ -3,9 +3,12 @@ package com.kstd.api.front.service;
 import com.kstd.api.common.enums.ErrorCode;
 import com.kstd.api.common.exception.ServiceException;
 import com.kstd.api.domain.lecture.dto.LectureDTO;
+import com.kstd.api.domain.lecture.dto.LectureRegistrationLogDTO;
 import com.kstd.api.domain.lecture.dto.PopularLectureDTO;
 import com.kstd.api.domain.lecture.entity.Lecture;
 import com.kstd.api.domain.lecture.entity.LectureRegistration;
+import com.kstd.api.domain.lecture.entity.LectureRegistrationLog;
+import com.kstd.api.domain.lecture.repository.LectureRegistrationLogRepository;
 import com.kstd.api.domain.lecture.repository.LectureRegistrationRepository;
 import com.kstd.api.domain.lecture.repository.LectureRepository;
 import com.kstd.api.domain.user.dto.UserDTO;
@@ -25,9 +28,11 @@ public class LectureUserService {
     private final UserRepository userRepository;
     private final LectureRepository lectureRepository;
     private final LectureRegistrationRepository lectureRegistrationRepository;
+    private final LectureRegistrationLogRepository lectureRegistrationLogRepository;
 
     /**
-     * 강연 목록 조회(신청 가능한 시점부터 강연 시작 시간 1일 후까지 노출)
+     * 강연 목록 조회
+     * (신청 가능한 시점부터 강연 시작 시간 1일 후까지 노출)
      *
      * @return List<LectureDTO>
      */
@@ -44,10 +49,10 @@ public class LectureUserService {
     }
 
     /**
-     * 강의 신청 내역 조회
+     * 사용자 사번으로 강의 신청 내역 조회
      *
-     * @param userNo
-     * @return UserLectureRegistrationsDTO
+     * @param userNo 사용자 사번
+     * @return 사용자 강연 신청 내역 DTO
      */
     @Transactional(readOnly = true)
     public UserLectureRegistrationsDTO findLectureRegistrationsByUserNo(Long userNo) {
@@ -65,30 +70,46 @@ public class LectureUserService {
                 .build();
     }
 
+    /**
+     * 강연 신청 취소 처리
+     *
+     * @param lectureId      강연 ID
+     * @param registrationId 강연 신청 ID
+     */
     @Transactional
     public void cancelRegistration(Long lectureId, Long registrationId) {
         LectureRegistration registration = lectureRegistrationRepository.findById(registrationId)
-                .orElseThrow(() -> new ServiceException("신청 정보를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_ENTITY));
+                .orElseThrow(() -> new ServiceException("강연 신청 정보를 찾을 수 없습니다. 등록 ID: " + registrationId, ErrorCode.NOT_FOUND_ENTITY));
 
         // 신청된 강연 ID가 일치하는지 확인
         if (!registration.getLecture().getId().equals(lectureId)) {
-            throw new ServiceException("강연 정보가 일치하지 않습니다.", ErrorCode.INVALID_REQUEST);
+            throw new ServiceException("강연 ID가 신청 정보와 일치하지 않습니다. 강연 ID: " + lectureId, ErrorCode.INVALID_REQUEST);
         }
 
         registration.cancelLecture();
     }
 
     /**
-     * 3일간 가장 신청이 많은 강연순으로 노출
+     * 최근 3일간 가장 신청이 많은 강연 순으로 조회
      *
-     * @return
+     * @return 인기 강연 목록
      */
     @Transactional(readOnly = true)
     public List<PopularLectureDTO> findPopularLectures() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime start = now.minusDays(3);
-        List<PopularLectureDTO> popularLectureDTOS = lectureRegistrationRepository.findPopularLecturesByRegistrationCount(start);
-        return popularLectureDTOS;
+        LocalDateTime start = LocalDateTime.now().minusDays(3);
+        return lectureRegistrationRepository.findPopularLecturesByRegistrationCount(start);
+    }
+
+    /**
+     * 강연 신청 상태 조회
+     *
+     * @param lectureId 강연 ID
+     * @param userId    강연 신청 ID
+     */
+    public LectureRegistrationLogDTO findLectureRegistrationLog(Long lectureId, Long userId) {
+        LectureRegistrationLog log = lectureRegistrationLogRepository.findByUserIdAndLectureId(userId, lectureId)
+                .orElseThrow(() -> new ServiceException("강연 신청 내역이 없습니다.", ErrorCode.NOT_FOUND_ENTITY));
+        return LectureRegistrationLogDTO.fromEntity(log);
     }
 
 }

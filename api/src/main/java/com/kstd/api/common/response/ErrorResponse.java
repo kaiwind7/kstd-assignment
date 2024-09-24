@@ -3,9 +3,13 @@ package com.kstd.api.common.response;
 import com.kstd.api.common.enums.ErrorCode;
 import com.kstd.api.common.exception.ServiceException;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
+@Builder
 @Getter
+@AllArgsConstructor
 @Schema(description = "에러 응답")
 public class ErrorResponse {
     @Schema(description = "에러 메시지")
