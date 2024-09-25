@@ -24,7 +24,7 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 데이터 설계
 
-![image-20240926002956407](erd.png)
+![erd](erd.png)
 
 ## API 목록
 
@@ -44,7 +44,7 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 
 
-![image-20240926014050504](.\queue.png)
+![queue](queue.png)
 
 - ### 동시성 문제 해결 및 데이터 일관성 보장
 
