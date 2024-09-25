@@ -14,7 +14,7 @@ public class PopularLectureDTO {
     @Schema(description = "강연등록자수")
     private Long registrationCount;
 
-    private PopularLectureDTO(Lecture lecture, Long registrationCount) {
+    public PopularLectureDTO(Lecture lecture, Long registrationCount) {
         this.lecture = LectureDTO.fromEntity(lecture);
         this.registrationCount = registrationCount;
     }
