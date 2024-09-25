@@ -24,7 +24,7 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 데이터 설계
 
-![image-20240926002956407](.\erd.png)
+![image-20240926002956407](erd.png)
 
 ## API 목록
 
