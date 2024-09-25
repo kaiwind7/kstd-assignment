@@ -15,10 +15,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,7 +54,7 @@ public class LectureUserController {
         return ApiResponse.success(lectureUserService.findLectureRegistrationsByUserNo(userNo));
     }
 
-    @PutMapping("/{lectureId}/registrations/{registrationId}/cancel")
+    @DeleteMapping("/{lectureId}/registrations/{registrationId}/cancel")
     @Operation(summary = "신청 강연 취소", description = "신청한 강연을 취소한다.", responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "신청 강연 취소 성공", content = @Content(schema = @Schema(implementation = UserLectureRegistrationsDTO.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "강연 ID가 신청 정보와 일치하지 않습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),

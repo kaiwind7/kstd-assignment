@@ -1,5 +1,6 @@
 package com.kstd.api.backoffice.service;
 
+import com.kstd.api.common.enums.Status;
 import com.kstd.api.common.exception.ServiceException;
 import com.kstd.api.domain.lecture.dto.LectureDTO;
 import com.kstd.api.domain.lecture.dto.LectureRegistrationsDTO;
@@ -168,7 +169,7 @@ public class LectureAdminServiceTest {
 
         // Mock 설정: findByLectureId 호출 시 강연 등록 내역 반환
         when(lectureRepository.findById(lecture.getId())).thenReturn(Optional.of(lecture));
-        when(lectureRegistrationRepository.findByLectureId(lecture.getId())).thenReturn(Arrays.asList(registration));
+        when(lectureRegistrationRepository.findByLectureIdAndStatus(lecture.getId(), Status.CONFIRMED)).thenReturn(Arrays.asList(registration));
 
         // When: 강연 신청자 목록 조회
         LectureRegistrationsDTO result = lectureAdminService.findLectureRegistrations(lecture.getId());
@@ -181,7 +182,7 @@ public class LectureAdminServiceTest {
 
         // Mock 메서드 호출 검증
         verify(lectureRepository, times(1)).findById(lecture.getId());
-        verify(lectureRegistrationRepository, times(1)).findByLectureId(lecture.getId());
+        verify(lectureRegistrationRepository, times(1)).findByLectureIdAndStatus(lecture.getId(), Status.CONFIRMED);
     }
 
 }

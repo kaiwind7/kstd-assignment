@@ -1,6 +1,7 @@
 package com.kstd.api.front.service;
 
 import com.kstd.api.common.enums.ErrorCode;
+import com.kstd.api.common.enums.Status;
 import com.kstd.api.common.exception.ServiceException;
 import com.kstd.api.domain.lecture.entity.Lecture;
 import com.kstd.api.domain.lecture.entity.LectureRegistration;
@@ -35,7 +36,9 @@ public class LectureRegistrationQueueService {
     private final UserRepository userRepository;
     private final LectureRegistrationRepository lectureRegistrationRepository;
     private final LectureRegistrationLogRepository lectureRegistrationLogRepository;
+
     private ExecutorService executorService;
+    private NotificationService notificationService;
 
     @PostConstruct
     private void init() {
@@ -62,18 +65,20 @@ public class LectureRegistrationQueueService {
     private void processQueue() {
         while (!Thread.currentThread().isInterrupted()) {
             LectureRegistrationRequest request = null;
+            LectureRegistrationLog registrationLogQueued = null;
 
             try {
                 request = registrationQueue.take();
-                updateRegistrationLogStatus(request, "PROCESSING", "강연 등록 요청을 처리 중");
+                registrationLogQueued = findRegistrationLogQueued(request);
+                updateRegistrationLogStatus(registrationLogQueued, Status.PROCESSING, "강연 등록 요청을 처리 중");
                 this.processRegistration(request);
-                updateRegistrationLogStatus(request, "SUCCESS", "강연 등록 성공");
+                updateRegistrationLogStatus(registrationLogQueued, Status.SUCCESS, "강연 등록 성공");
             } catch (InterruptedException e) {
                 log.warn("강연 등록 처리 스레드가 인터럽트되었습니다.", e);
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
                 log.error("강연 등록 요청 처리 중 오류가 발생했습니다.", e);
-                updateRegistrationLogStatus(request, "FAILED", e.getMessage());
+                updateRegistrationLogStatus(registrationLogQueued, Status.FAILED, e.getMessage());
                 handleRegistrationFailure(request, e);
             }
         }
@@ -106,18 +111,19 @@ public class LectureRegistrationQueueService {
         // 큐에 넣기 전에 DB에서 중복 여부 확인
         if (isAlreadyQueuedOrProcessing(request.getUserId(), request.getLectureId())) {
             String message = "이미 대기열에 등록된 요청입니다.";
-            updateRegistrationLogStatus(request, "DUPLICATE_IN_QUEUE", message);
+            //updateRegistrationLogStatus(request, Status.DUPLICATE_IN_QUEUE, message);
             log.warn("대기열 중복 요청: 사용자 ID: {}, 강연 ID: {}", request.getUserId(), request.getLectureId());
             return message;
         }
 
+        LectureRegistrationLog lectureRegistrationLog = null;
         try {
-            saveRegistrationLog(request, "QUEUED", "강의 등록 요청이 큐에 추가되었습니다.");
+            lectureRegistrationLog = saveRegistrationLog(request, Status.QUEUED, "강의 등록 요청이 큐에 추가되었습니다.");
 
             if (!registrationQueue.offer(request, 2, TimeUnit.SECONDS)) {
                 String message = "강의 신청 대기열이 가득 찼습니다. 나중에 다시 시도하세요.";
                 log.warn(message);
-                updateRegistrationLogStatus(request, "FAILED", message);
+                updateRegistrationLogStatus(lectureRegistrationLog, Status.FAILED, message);
                 return message;
             }
 
@@ -127,7 +133,7 @@ public class LectureRegistrationQueueService {
             Thread.currentThread().interrupt();
             String message = "큐에 추가하는 동안 인터럽트가 발생했습니다.";
             log.error(message, e);
-            updateRegistrationLogStatus(request, "FAILED", message);
+            updateRegistrationLogStatus(lectureRegistrationLog, Status.FAILED, message);
             return message;
         }
     }
@@ -147,7 +153,7 @@ public class LectureRegistrationQueueService {
         checkLectureRegistration(request);
 
         // 수용 인원 초과 확인
-        if (lectureRegistrationRepository.findByLectureId(request.getLectureId()).size() >= lecture.getCapacity()) {
+        if (lectureRegistrationRepository.findByLectureIdAndStatus(request.getLectureId(), Status.CONFIRMED).size() >= lecture.getCapacity()) {
             throw new ServiceException("강의 수용 인원을 초과했습니다.", ErrorCode.OVER_CAPACITY);
         }
 
@@ -156,7 +162,7 @@ public class LectureRegistrationQueueService {
                 .lecture(lecture)
                 .user(user)
                 .registrationTime(LocalDateTime.now())
-                .status("CONFIRMED").build());
+                .status(Status.CONFIRMED).build());
 
         log.info("강연 등록 완료 - userId: {}", request.getUserId());
     }
@@ -167,7 +173,7 @@ public class LectureRegistrationQueueService {
      * @param lectureRegistrationRequest 강연 등록 요청
      */
     private void checkLectureRegistration(LectureRegistrationRequest lectureRegistrationRequest) {
-        if (lectureRegistrationRepository.findByLectureIdAndUserId(lectureRegistrationRequest.getLectureId(), lectureRegistrationRequest.getUserId()).isPresent()) {
+        if (lectureRegistrationRepository.findByLectureIdAndUserIdAndStatus(lectureRegistrationRequest.getLectureId(), lectureRegistrationRequest.getUserId(), Status.CONFIRMED).isPresent()) {
             throw new ServiceException("이미 등록된 사용자입니다.", ErrorCode.ALREADY_REGISTERED_USER);
         }
     }
@@ -179,27 +185,33 @@ public class LectureRegistrationQueueService {
      * @param status  상태 코드
      * @param message 메시지
      */
-    private void saveRegistrationLog(LectureRegistrationRequest request, String status, String message) {
+    private LectureRegistrationLog saveRegistrationLog(LectureRegistrationRequest request, Status status, String message) {
         LectureRegistrationLog log = LectureRegistrationLog.builder()
                 .userId(request.getUserId())
                 .lectureId(request.getLectureId())
                 .status(status)
                 .message(message)
                 .build();
-        lectureRegistrationLogRepository.save(log);
+        return lectureRegistrationLogRepository.save(log);
+    }
+
+    private LectureRegistrationLog findRegistrationLogQueued(LectureRegistrationRequest request) {
+        return lectureRegistrationLogRepository.findByUserIdAndLectureIdAndStatus(request.getUserId(), request.getLectureId(), Status.QUEUED)
+                .orElseThrow(() -> new ServiceException("큐 등록 로그를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_ENTITY));
     }
 
     /**
      * 로그 상태 업데이트 메서드
      *
-     * @param request 강의 신청 요청
+     * @param log     강의 신청 로그
      * @param status  상태 코드
      * @param message 메시지
      */
-    private void updateRegistrationLogStatus(LectureRegistrationRequest request, String status, String message) {
-        LectureRegistrationLog log = lectureRegistrationLogRepository.findByUserIdAndLectureId(request.getUserId(), request.getLectureId())
-                .orElseThrow(() -> new ServiceException("등록 로그를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_ENTITY));
+    private void updateRegistrationLogStatus(LectureRegistrationLog log, Status status, String message) {
+//        LectureRegistrationLog log = lectureRegistrationLogRepository.findByUserIdAndLectureId(request.getUserId(), request.getLectureId())
+//                .orElseThrow(() -> new ServiceException("등록 로그를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_ENTITY));
         log.updateLog(status, message);
+        lectureRegistrationLogRepository.save(log);
     }
 
     // 등록 실패 시 처리 로직
@@ -208,6 +220,6 @@ public class LectureRegistrationQueueService {
         String errorMessage = "강의 신청에 실패했습니다. 사유: " + e.getMessage();
         log.error("Lecture registration failed for userId: {}, lectureId: {}. Error: {}",
                 request.getUserId(), request.getLectureId(), e.getMessage());
-        //notificationService.notifyUser(request.getUserId(), errorMessage); // 실패 알림 전송
+        notificationService.notifyUser(request.getUserId(), errorMessage); // 실패 알림 전송
     }
 }

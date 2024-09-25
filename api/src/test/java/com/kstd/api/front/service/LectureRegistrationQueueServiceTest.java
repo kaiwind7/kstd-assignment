@@ -1,5 +1,6 @@
 package com.kstd.api.front.service;
 
+import com.kstd.api.common.enums.Status;
 import com.kstd.api.common.exception.ServiceException;
 import com.kstd.api.domain.lecture.entity.Lecture;
 import com.kstd.api.domain.lecture.entity.LectureRegistration;
@@ -85,7 +86,7 @@ public class LectureRegistrationQueueServiceTest {
         LectureRegistrationLog log = LectureRegistrationLog.builder()
                 .userId(request.getUserId())
                 .lectureId(request.getLectureId())
-                .status("QUEUED")
+                .status(Status.QUEUED)
                 .message("Initial Log")
                 .build();
 
@@ -114,10 +115,10 @@ public class LectureRegistrationQueueServiceTest {
                 .thenReturn(Optional.of(user));
 
 
-        when(lectureRegistrationRepository.findByLectureIdAndUserId(request.getLectureId(), request.getUserId()))
+        when(lectureRegistrationRepository.findByLectureIdAndUserIdAndStatus(request.getLectureId(), request.getUserId(), Status.CONFIRMED))
                 .thenReturn(Optional.empty());
 
-        when(lectureRegistrationRepository.findByLectureId(request.getLectureId()))
+        when(lectureRegistrationRepository.findByLectureIdAndStatus(request.getLectureId(), Status.CONFIRMED))
                 .thenReturn(Arrays.asList());
 
         // When: 강연 신청 처리
@@ -140,7 +141,7 @@ public class LectureRegistrationQueueServiceTest {
         when(userRepository.findById(request.getUserId()))
                 .thenReturn(Optional.of(user));
 
-        when(lectureRegistrationRepository.findByLectureId(request.getLectureId()))
+        when(lectureRegistrationRepository.findByLectureIdAndStatus(request.getLectureId(), Status.CONFIRMED))
                 .thenReturn(Arrays.asList(new LectureRegistration[lecture.getCapacity()]));
 
         // When: 강연 신청 시 예외 발생 여부 확인
@@ -163,7 +164,7 @@ public class LectureRegistrationQueueServiceTest {
         when(userRepository.findById(request.getUserId()))
                 .thenReturn(Optional.of(user));
 
-        when(lectureRegistrationRepository.findByLectureIdAndUserId(request.getLectureId(), request.getUserId()))
+        when(lectureRegistrationRepository.findByLectureIdAndUserIdAndStatus(request.getLectureId(), request.getUserId(), Status.CONFIRMED))
                 .thenReturn(Optional.of(new LectureRegistration()));
 
         // When: 강연 신청 시 예외 발생 여부 확인

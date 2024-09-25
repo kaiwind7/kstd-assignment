@@ -1,6 +1,7 @@
 package com.kstd.api.backoffice.service;
 
 import com.kstd.api.common.enums.ErrorCode;
+import com.kstd.api.common.enums.Status;
 import com.kstd.api.common.exception.ServiceException;
 import com.kstd.api.domain.lecture.dto.LectureDTO;
 import com.kstd.api.domain.lecture.dto.LectureRegistrationsDTO;
@@ -108,7 +109,7 @@ public class LectureAdminService {
      */
     public LectureRegistrationsDTO findLectureRegistrations(Long lectureId) {
         Lecture lecture = findLectureById(lectureId);
-        List<LectureRegistration> lectureRegistrations = lectureRegistrationRepository.findByLectureId(lectureId);
+        List<LectureRegistration> lectureRegistrations = lectureRegistrationRepository.findByLectureIdAndStatus(lectureId, Status.CONFIRMED);
 
         return LectureRegistrationsDTO.builder()
                 .lecture(LectureDTO.fromEntity(lecture))

@@ -1,6 +1,7 @@
 package com.kstd.api.front.service;
 
 import com.kstd.api.common.enums.ErrorCode;
+import com.kstd.api.common.enums.Status;
 import com.kstd.api.common.exception.ServiceException;
 import com.kstd.api.domain.lecture.dto.LectureDTO;
 import com.kstd.api.domain.lecture.dto.LectureRegistrationLogDTO;
@@ -60,7 +61,7 @@ public class LectureUserService {
         User user = userRepository.findByUserNo(userNo).orElseThrow(() -> new ServiceException("해당 사번의 사용자 정보를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_ENTITY));
 
         // 해당 사용자에 대한 강연 신청 내역 조회
-        List<LectureRegistration> lectureRegistrations = lectureRegistrationRepository.findLectureRegistrationByUser(user);
+        List<LectureRegistration> lectureRegistrations = lectureRegistrationRepository.findLectureRegistrationByUserAndStatus(user, Status.CONFIRMED);
 
         return UserLectureRegistrationsDTO.builder()
                 .user(UserDTO.fromEntity(user))

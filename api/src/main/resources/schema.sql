@@ -30,14 +30,18 @@ COMMENT ON COLUMN users.id IS 'id';
 COMMENT ON COLUMN users.user_no IS '사용자사번';
 COMMENT ON COLUMN users.name IS '사용자이름';
 
+CREATE INDEX IF NOT EXISTS idx_users_user_no ON users (user_no);
+
 
 CREATE TABLE IF NOT EXISTS lecture_registration (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     lecture_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
     registration_time TIMESTAMP NOT NULL,
-    status VARCHAR(20),
+    status VARCHAR(20)
 );
+
+CREATE INDEX IF NOT EXISTS idx_lecture_registration_01 ON lecture_registration (lecture_id, user_id);
 
 COMMENT ON TABLE lecture_registration IS '강연 신청';
 COMMENT ON COLUMN lecture_registration.id IS 'id';
@@ -46,7 +50,7 @@ COMMENT ON COLUMN lecture_registration.user_id IS '사용자ID';
 COMMENT ON COLUMN lecture_registration.registration_time IS '신청시간';
 COMMENT ON COLUMN lecture_registration.status IS '신청상태';
 
-CREATE INDEX IF NOT EXISTS idx_users_user_no ON users (user_no);
+
 
 CREATE TABLE IF NOT EXISTS lecture_registration_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

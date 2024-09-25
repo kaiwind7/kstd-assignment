@@ -1,8 +1,11 @@
 package com.kstd.api.domain.lecture.entity;
 
+import com.kstd.api.common.enums.Status;
 import com.kstd.api.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -40,9 +43,10 @@ public class LectureRegistration {
     private LocalDateTime registrationTime;
 
     @Column(name = "status", nullable = false)
-    private String status; // 신청 상태 (예: PENDING, CONFIRMED, CANCELED)
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     public void cancelLecture() {
-        this.status = "CANCELED";
+        this.status = Status.CANCELED;
     }
 }

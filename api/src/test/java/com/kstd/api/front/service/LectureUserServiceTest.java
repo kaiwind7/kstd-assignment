@@ -1,5 +1,6 @@
 package com.kstd.api.front.service;
 
+import com.kstd.api.common.enums.Status;
 import com.kstd.api.common.exception.ServiceException;
 import com.kstd.api.domain.lecture.dto.LectureDTO;
 import com.kstd.api.domain.lecture.dto.LectureRegistrationLogDTO;
@@ -75,7 +76,7 @@ public class LectureUserServiceTest {
                 .lecture(lecture)
                 .user(user)
                 .registrationTime(LocalDateTime.now())
-                .status("CONFIRMED").build();
+                .status(Status.CONFIRMED).build();
     }
 
     @Test
@@ -100,7 +101,7 @@ public class LectureUserServiceTest {
     public void testFindLectureRegistrationsByUserNo_Success() {
         // Given: 사용자 사번으로 강연 신청 내역 조회 시 Mock 설정
         when(userRepository.findByUserNo(user.getUserNo())).thenReturn(Optional.of(user));
-        when(lectureRegistrationRepository.findLectureRegistrationByUser(user))
+        when(lectureRegistrationRepository.findLectureRegistrationByUserAndStatus(user, Status.CONFIRMED))
                 .thenReturn(Arrays.asList(registration));
 
         // When: 사용자 사번으로 강연 신청 내역 조회
@@ -114,7 +115,7 @@ public class LectureUserServiceTest {
 
         // Mock 메서드 호출 검증
         verify(userRepository, times(1)).findByUserNo(user.getUserNo());
-        verify(lectureRegistrationRepository, times(1)).findLectureRegistrationByUser(user);
+        verify(lectureRegistrationRepository, times(1)).findLectureRegistrationByUserAndStatus(user, Status.CONFIRMED);
     }
 
 
@@ -128,7 +129,7 @@ public class LectureUserServiceTest {
 
         // Then: 강연 신청 상태가 'CANCELED'로 변경되었는지 확인
         verify(lectureRegistrationRepository, times(1)).findById(registration.getId());
-        assertEquals("CANCELED", registration.getStatus());
+        assertEquals(Status.CANCELED, registration.getStatus());
     }
 
     @Test
@@ -172,7 +173,7 @@ public class LectureUserServiceTest {
                 .id(1L)
                 .userId(user.getId())
                 .lectureId(lecture.getId())
-                .status("QUEUED").build();
+                .status(Status.QUEUED).build();
 
         // Mock 설정: findByUserIdAndLectureId 메서드가 신청 로그를 반환하도록 설정
         when(lectureRegistrationLogRepository.findByUserIdAndLectureId(user.getId(), lecture.getId()))
@@ -185,7 +186,7 @@ public class LectureUserServiceTest {
         assertNotNull(result);
         assertEquals(log.getUserId(), result.getUserId());
         assertEquals(log.getLectureId(), result.getLectureId());
-        assertEquals("QUEUED", result.getStatus());
+        assertEquals(Status.QUEUED, result.getStatus());
 
         // Mock 메서드 호출 검증
         verify(lectureRegistrationLogRepository, times(1)).findByUserIdAndLectureId(user.getId(), lecture.getId());

@@ -1,5 +1,6 @@
 package com.kstd.api.domain.lecture.repository;
 
+import com.kstd.api.common.enums.Status;
 import com.kstd.api.domain.lecture.dto.PopularLectureDTO;
 import com.kstd.api.domain.lecture.entity.LectureRegistration;
 import com.kstd.api.domain.user.entity.User;
@@ -16,27 +17,30 @@ public interface LectureRegistrationRepository extends JpaRepository<LectureRegi
     /**
      * 특정 사용자의 모든 강연 등록 정보를 조회
      *
-     * @param user 강연 등록 정보를 조회할 사용자
+     * @param user   강연 등록 정보를 조회할 사용자
+     * @param status 강연 등록 정보를 조회할 사용자
      * @return 해당 사용자가 등록한 모든 강연 등록 목록
      */
-    List<LectureRegistration> findLectureRegistrationByUser(User user);
+    List<LectureRegistration> findLectureRegistrationByUserAndStatus(User user, Status status);
 
     /**
-     * 특정 강연 ID와 사용자 ID로 강연 등록 정보를 조회
+     * 특정 강연 ID와 사용자 ID, 상태값으로 강연 등록 정보를 조회
      *
      * @param lectureId 강연 ID
      * @param userId    사용자 ID
+     * @param status    상태
      * @return 강연 등록 정보 (존재하지 않으면 빈 Optional 반환)
      */
-    Optional<LectureRegistration> findByLectureIdAndUserId(Long lectureId, Long userId);
+    Optional<LectureRegistration> findByLectureIdAndUserIdAndStatus(Long lectureId, Long userId, Status status);
 
     /**
      * 특정 강연에 대한 모든 강연 등록 정보를 조회
      *
      * @param lectureId 강연 ID
+     * @param status    상태
      * @return 해당 강연에 등록된 모든 강연 등록 정보 목록
      */
-    List<LectureRegistration> findByLectureId(Long lectureId);
+    List<LectureRegistration> findByLectureIdAndStatus(Long lectureId, Status status);
 
     /**
      * 날짜 이후의 강연 신청 수를 기준으로 가장 인기 있는 강연 목록을 조회
@@ -49,6 +53,7 @@ public interface LectureRegistrationRepository extends JpaRepository<LectureRegi
             "JOIN LectureRegistration r " +
             "ON r.lecture.id = l.id " +
             "WHERE r.registrationTime >= :startDate " +
+            "AND r.status = 'CONFIRMED' " +
             "GROUP BY l " +
             "ORDER BY COUNT(r.id) DESC")
     List<PopularLectureDTO> findPopularLecturesByRegistrationCount(@Param("startDate") LocalDateTime startDate);
