@@ -20,7 +20,6 @@ COMMENT ON COLUMN lecture.content IS'강연 내용';
 COMMENT ON COLUMN lecture.created_at IS'생성 시간';
 COMMENT ON COLUMN lecture.updated_at IS'수정 시간';
 
-
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_no INT NOT NULL,
@@ -33,7 +32,7 @@ COMMENT ON COLUMN users.name is '사용자 이름';
 
 CREATE INDEX IF NOT EXISTS idx_users_user_no ON users (user_no);
 
-CREATE TABLE LectureRegistrationLog (
+CREATE TABLE IF NOT EXISTS lecture_registration_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     lecture_id BIGINT NOT NULL,
@@ -42,3 +41,5 @@ CREATE TABLE LectureRegistrationLog (
     created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_lecture_registration_log_01 ON lecture_registration_log (user_id, lecture_id);

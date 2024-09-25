@@ -1,6 +1,7 @@
 package com.kstd.api.domain.lecture.dto;
 
 import com.kstd.api.domain.lecture.entity.LectureRegistrationLog;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,10 +11,15 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Schema(description = "강연등록로그")
 public class LectureRegistrationLogDTO {
+    @Schema(description = "사용자ID")
     private Long userId;
+    @Schema(description = "강연ID")
     private Long lectureId;
+    @Schema(description = "등록요청상태")
     private String status;
+    @Schema(description = "메시지")
     private String message;
 
     public static LectureRegistrationLogDTO fromEntity(LectureRegistrationLog log) {

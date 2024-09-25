@@ -27,25 +27,25 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/user/lectures")
 @Tag(name = "사용자 강의")
 public class LectureUserController {
     private final LectureUserService lectureUserService;
     private final LectureRegistrationQueueService lectureRegistrationQueueService;
 
-    @GetMapping("/lectures/scheduled")
+    @GetMapping("/scheduled")
     @Operation(summary = "강연 목록 조회", description = "신청 가능한 시점(1주일 전)부터 강연 시작 시간 1일 후까지 노출한다.")
     public ApiResponse<List<LectureDTO>> getLectureList() {
         return ApiResponse.success(lectureUserService.findLectureByScheduled());
     }
 
-    @PostMapping("/registrations/user")
+    @PostMapping("/registrations")
     @Operation(summary = "강연 신청", description = "강연 신청(사번 입력, 같은 강연 중복 신청 제한)을 큐에 적재한다.")
     public ApiResponse<String> registerForLecture(@RequestBody LectureRegistrationRequest lectureRegistrationRequest) {
         return ApiResponse.success(lectureRegistrationQueueService.addRegistrationToQueue(lectureRegistrationRequest));
     }
 
-    @GetMapping("/registrations/user/{userNo}")
+    @GetMapping("/registrations/{userNo}")
     @Operation(summary = "강의 신청 내역 조회", description = "강의 신청 내역 조회(사번 입력)한다", responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = UserLectureRegistrationsDTO.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사번의 사용자 정보를 찾을 수 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -67,7 +67,7 @@ public class LectureUserController {
         return ApiResponse.success();
     }
 
-    @GetMapping("/lectures/popular")
+    @GetMapping("/popular")
     @Operation(summary = "실시간 인기 강연", description = "실시간 인기 강연을 조회한다.(3일간 가장 신청이 많은 강연순으로 노출)", responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = PopularLectureDTO.class))),
     })
@@ -75,14 +75,10 @@ public class LectureUserController {
         return ApiResponse.success(lectureUserService.findPopularLectures());
     }
 
-
-    /**
-     * 사용자의 강의 신청 상태를 조회합니다.
-     *
-     * @param userId 사용자 ID
-     * @return 신청 상태 목록
-     */
-    @GetMapping("/lectures/{lectureId}/status/{userId}")
+    @GetMapping("/{lectureId}/status/{userId}")
+    @Operation(summary = "강연 신청 상태 조회", description = "사용자의 강연 신청 상태를 조회한다.", responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(schema = @Schema(implementation = LectureRegistrationLogDTO.class))),
+    })
     public ApiResponse<LectureRegistrationLogDTO> getRegistrationStatus(@PathVariable Long lectureId,
                                                                         @PathVariable Long userId) {
         LectureRegistrationLogDTO logs = lectureUserService.findLectureRegistrationLog(lectureId, userId);

@@ -16,8 +16,6 @@ public interface LectureRegistrationLogRepository extends JpaRepository<LectureR
      */
     Optional<LectureRegistrationLog> findByUserIdAndLectureId(Long userId, Long lectureId);
 
-    List<LectureRegistrationLog> findByUserId(Long userId);
-
     /**
      * 사용자 ID와 강연 ID, 상태 목록에 해당하는 로그가 존재하는지 확인합니다.
      *

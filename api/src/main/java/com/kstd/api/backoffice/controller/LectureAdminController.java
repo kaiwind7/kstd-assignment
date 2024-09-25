@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/lectures")
+@RequestMapping("/admin/lectures")
 @Tag(name = "백오피스 강연 API")
 public class LectureAdminController {
     private final LectureAdminService lectureAdminService;
@@ -72,7 +72,7 @@ public class LectureAdminController {
         return ApiResponse.success();
     }
 
-    @GetMapping("/registrations/{lectureId}")
+    @GetMapping("/{lectureId}/registrations")
     @Operation(summary = "강연 신청자 목록", description = "강연 신청자 목고을 조회한다.", responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "강연 정보가 없습니다")

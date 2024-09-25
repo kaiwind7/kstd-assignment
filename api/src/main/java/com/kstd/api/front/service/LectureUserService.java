@@ -111,7 +111,6 @@ public class LectureUserService {
                 .orElseThrow(() -> new ServiceException("강연 신청 내역이 없습니다.", ErrorCode.NOT_FOUND_ENTITY));
         return LectureRegistrationLogDTO.fromEntity(log);
     }
-
 }
 
 
